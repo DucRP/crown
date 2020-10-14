@@ -29,6 +29,7 @@
 #include "core/types.h"
 #include "device/console_server.h"
 #include "device/device.h"
+#include "device/graph.h"
 #include "device/input_device.h"
 #include "device/input_manager.h"
 #include "device/log.h"
@@ -55,6 +56,7 @@
 #include "resource/texture_resource.h"
 #include "resource/unit_resource.h"
 #include "world/audio.h"
+#include "world/debug_line.h"
 #include "world/material_manager.h"
 #include "world/physics.h"
 #include "world/shader_manager.h"
@@ -342,6 +344,8 @@ void Device::run()
 	_resource_manager->register_type(RESOURCE_TYPE_TEXTURE,          RESOURCE_VERSION_TEXTURE,          txr::load, txr::unload, txr::online, txr::offline);
 	_resource_manager->register_type(RESOURCE_TYPE_UNIT,             RESOURCE_VERSION_UNIT,             NULL,      NULL,        NULL,        NULL        );
 
+	graph_globals::register_console_commands(*_console_server);
+
 	// Read config
 	{
 		TempAllocator512 ta;
@@ -425,6 +429,8 @@ void Device::run()
 
 	logi(DEVICE, "Initialized in " TIME_FMT, time::seconds(time::now() - run_t0));
 
+	DebugLine _graph_lines(*_shader_manager, false);
+
 	_lua_environment->call_global("init");
 
 	u16 old_width = _width;
@@ -493,6 +499,9 @@ void Device::run()
 
 		profiler_globals::flush();
 
+		_graph_lines.reset();
+		graph_globals::draw_all(_graph_lines, _width, _height);
+
 #if CROWN_TOOLS
 		tool_update(dt);
 #else
@@ -521,6 +530,7 @@ void Device::run()
 	CE_DELETE(_allocator, _input_manager);
 	CE_DELETE(_allocator, _material_manager);
 	CE_DELETE(_allocator, _shader_manager);
+	graph_globals::shutdown();
 	CE_DELETE(_allocator, _resource_manager);
 	CE_DELETE(_allocator, _resource_loader);
 
@@ -595,6 +605,19 @@ void Device::render(World& world, UnitId camera_unit)
 	bgfx::setViewTransform(VIEW_DEBUG, to_float_ptr(view), to_float_ptr(proj));
 	bgfx::setViewTransform(VIEW_GUI, to_float_ptr(MATRIX4X4_IDENTITY), to_float_ptr(ortho_proj));
 	bgfx::setViewTransform(VIEW_SELECTION, to_float_ptr(view), to_float_ptr(proj));
+
+	f32 graph_ortho[16];
+	bx::mtxOrtho(graph_ortho
+		, -_width / 2.0f
+		,  _width / 2.0f
+		, -_height / 2.0f
+		,  _height / 2.0f
+		, 0.0f
+		, 1.0f
+		, 0.0f
+		, caps->homogeneousDepth
+		);
+	bgfx::setViewTransform(VIEW_GRAPH, to_float_ptr(MATRIX4X4_IDENTITY), to_float_ptr(from_array(graph_ortho)));
 
 	bgfx::setViewRect(VIEW_SPRITE_0, 0, 0, _width, _height);
 	bgfx::setViewRect(VIEW_SPRITE_1, 0, 0, _width, _height);
