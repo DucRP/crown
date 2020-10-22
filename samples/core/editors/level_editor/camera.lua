@@ -174,10 +174,21 @@ function Camera:screen_length_to_world_length(position, length)
 end
 
 function Camera:update(dt, dx, dy, keyboard, mouse)
+	local pose_begin = self:local_pose()
+
 	if dx ~= 0 or dy ~= 0 then
 		if self._move_callback ~= nil then
 			self._move_callback(self, mouse.x, mouse.y)
 		end
+	end
+
+	local pose_end = self:local_pose()
+
+	if not Matrix4x4.equal(pose_begin, pose_end) then
+		Device.console_send { type = "camera"
+			, position = Matrix4x4.translation(self:local_pose())
+			, rotation = Matrix4x4.rotation(self:local_pose())
+			}
 	end
 end
 

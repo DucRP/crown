@@ -336,6 +336,7 @@ public class LevelEditorApplication : Gtk.Application
 	private Gtk.Stack _main_stack;
 
 	private uint _save_timer_id;
+	private uint _timer_id;
 
 	public LevelEditorApplication()
 	{
@@ -398,6 +399,8 @@ public class LevelEditorApplication : Gtk.Application
 		// .ui files.
 		// https://stackoverflow.com/questions/24235937/custom-gtk-widget-with-template-ui
 		new Clamp().get_type().ensure();
+
+		_timer_id = 0;
 
 		this.add_action_entries(action_entries_file, this);
 		this.add_action_entries(action_entries_edit, this);
@@ -972,6 +975,29 @@ public class LevelEditorApplication : Gtk.Application
 			}
 
 			_level.on_selection(ids);
+		}
+		else if (msg_type == "camera")
+		{
+			if (_timer_id == 0)
+			{
+				_timer_id = GLib.Timeout.add(250 /*ms*/, () => {
+					Hashtable position = (Hashtable)msg["position"];
+					Hashtable rotation = (Hashtable)msg["rotation"];
+
+					Vector3 pos = Vector3.from_array(position as ArrayList<Value?>);
+					Quaternion rot = Quaternion.from_array(rotation as ArrayList<Value?>);
+
+					_statusbar.set_temporary_message("%.3f %.3f %.3f, %.3f %.3f %.3f".printf(pos.x
+						, pos.y
+						, pos.z
+						, rot.x
+						, rot.y
+						, rot.z
+						));
+					_timer_id = 0;
+					return false; // Remove the source
+				});
+			}
 		}
 		else if (msg_type == "error")
 		{
