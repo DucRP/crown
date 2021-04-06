@@ -587,9 +587,8 @@ static void do_REPL(LuaEnvironment* env, const char* lua)
 
 static void console_command_REPL(ConsoleServer& /*cs*/, u32 /*client_id*/, const char* json, void* user_data)
 {
-	TempAllocator4096 ta;
-	JsonObject obj(ta);
-	DynamicString script(ta);
+	JsonObject obj(default_allocator());
+	DynamicString script(default_allocator());
 
 	sjson::parse(obj, json);
 	sjson::parse_string(script, obj["repl"]);

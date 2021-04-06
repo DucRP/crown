@@ -273,6 +273,7 @@ void ConsoleServer::execute_message_handlers(bool sync)
 		const char* msg = array::begin(*_input_read) + fb.position();
 		br.skip(msg_len);
 
+		// printf("execute_message_handlers: id: %u len: %u msg: %.*s\n", client_id, msg_len, msg_len, msg);
 
 		// Process message.
 		JsonObject obj(default_allocator());
@@ -412,6 +413,7 @@ s32 ConsoleServer::run_input_thread()
 					num_read += rr.bytes_read;
 				}
 
+				// printf("read msg: %.*s\n", num_read, array::end(*_input_write) - num_read);
 				if (num_read != msg_len)
 				{
 					// Remove partial data that has been written to the input buffer.
@@ -465,8 +467,12 @@ s32 ConsoleServer::run_output_thread()
 			// Lookup socket by its ID.
 			TCPSocket socket;
 			if (console_server_internal::get_socket_by_id(&socket, *this, client_id) != true)
+			{
+				printf("*** bad client or malformed message: %u len %u msg %s\n", client_id, msg_len, msg);
 				continue;
+			}
 
+			// printf("sending msg: %.*s\n", msg_len, msg);
 			socket.write(msg-4, msg_len+4);
 		}
 
