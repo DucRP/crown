@@ -327,7 +327,7 @@ bgfx_shaders = {
 
 			void main()
 			{
-				gl_FragColor.r = uint(u_unit_id.x);
+				gl_FragColor.r = u_unit_id.r;
 			}
 		"""
 	}
@@ -360,7 +360,7 @@ bgfx_shaders = {
 		"""
 
 		fs_code = """
-			USAMPLER2D(s_selection, 0);
+			SAMPLER2D(s_selection, 0);
 			SAMPLER2D(s_selection_depth, 1);
 			SAMPLER2D(s_main_depth, 2);
 			uniform vec4 u_outline_color;
@@ -369,7 +369,7 @@ bgfx_shaders = {
 			{
 				vec2 tex_size = textureSize(s_selection, 0) - vec2(1, 1);
 
-				uint id[8];
+				float id[8];
 				id[0] = texelFetch(s_selection, ivec2(v_texcoord0 * tex_size + vec2(-1, -1)), 0).r;
 				id[1] = texelFetch(s_selection, ivec2(v_texcoord0 * tex_size + vec2( 0, -1)), 0).r;
 				id[2] = texelFetch(s_selection, ivec2(v_texcoord0 * tex_size + vec2( 1, -1)), 0).r;
@@ -379,7 +379,7 @@ bgfx_shaders = {
 				id[6] = texelFetch(s_selection, ivec2(v_texcoord0 * tex_size + vec2(-1,  1)), 0).r;
 				id[7] = texelFetch(s_selection, ivec2(v_texcoord0 * tex_size + vec2(-1,  0)), 0).r;
 
-				uint ref_id = texelFetch(s_selection, ivec2(v_texcoord0 * tex_size), 0).r;
+				float ref_id = texelFetch(s_selection, ivec2(v_texcoord0 * tex_size), 0).r;
 
 				float alpha = 0.0;
 				for (int ii = 0; ii < 8; ++ii)

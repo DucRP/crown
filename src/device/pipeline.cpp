@@ -181,7 +181,7 @@ void Pipeline::reset(u16 width, u16 height)
 		, height
 		, false
 		, 1
-		, bgfx::TextureFormat::R32U
+		, bgfx::TextureFormat::R32F
 		, BGFX_TEXTURE_RT
 		);
 	if (bgfx::isValid(_selection_depth_texture))
